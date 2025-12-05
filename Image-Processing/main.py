@@ -18,23 +18,40 @@ def main():
         print("No kernel type provided")
     
     elif len(sys.argv) == 3:
-        out    = processor.processImage(imgdata, kernel=sys.argv[2])
+        out    = processor.processImage(imgdata, operationData=sys.argv[2])
         print(out.shape)
         outimg = Image.fromarray(out)
         outimg.show()
         return 
 
     else:
-        out = processor.processImage(imgdata, kernel=sys.argv[2])
-        idx = 3
+        out = np.zeros_like(imgdata)
+        idx = 2 
         while idx < len(sys.argv):
             if sys.argv[idx] == "colorTransform":
-                kernel = (sys.argv[idx], sys.argv[idx+1], sys.argv[idx+2],)
-                print(kernel)
-                out = processor.processImage(out, kernel=kernel)
+                operationData = (sys.argv[idx], sys.argv[idx+1], sys.argv[idx+2],)
+                
+                if idx == 2:
+                    out = processor.processImage(imgdata, operationData=operationData)
+                else:
+                    out = processor.processImage(out, operationData=operationData)
                 idx = idx + 3
+            
+            elif sys.argv[idx] == "add":
+                operationData = (sys.argv[idx], sys.argv[idx+1],)
+                print(operationData) 
+
+                if idx == 2:
+                    out = processor.processImage(imgdata, operationData=operationData)
+                else:
+                    out = processor.processImage(out, operationData=operationData)
+                idx = idx + 2
+
             else:
-                out = processor.processImage(out, kernel=sys.argv[idx])
+                if idx == 2:
+                    out = processor.processImage(imgdata, operationData=sys.argv[idx])
+                else:
+                    out = processor.processImage(out, operationData=sys.argv[idx])
                 idx = idx + 1
 
         outimg = Image.fromarray(out)

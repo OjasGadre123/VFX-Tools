@@ -20,12 +20,21 @@ class Processor:
 
                          "vEdgeDetect": np.array([[-1, 0, 1],
                                                   [-1, 0, 1],
-                                                  [-1, 0, 1]])
+                                                  [-1, 0, 1]]),
+
+                         "Emboss"     : np.array([[-2, -1, 0],
+                                                  [-1,  0, 1],
+                                                  [ 0,  1, 2]]),
+
+                         "HighPass"   : np.array([[-1,-1, -1],
+                                                  [-1, 8, -1],
+                                                  [-1,-1, -1]])
                         }
     
-    def processImage(self, x, kernel = None):
 
-        if kernel == "EdgeDetection":
+    def processImage(self, x, operationData = None):
+
+        if operationData == "EdgeDetection":
 
             gray = 0.299 * x[:,:,0] + 0.587 * x[:,:,1] + 0.144 * x[:,:,2]
             gx = convolve2d(gray, self.kernels["hEdgeDetect"], mode='same', boundary='symm')
@@ -35,18 +44,22 @@ class Processor:
             edge_rgb = np.stack([mag, mag, mag], axis=-1)
             return np.clip(edge_rgb, 0, 255).astype(np.uint8)
 
-        elif isinstance(kernel, tuple):
-            if kernel[0] == "colorTransform":
-                init = ast.literal_eval(kernel[1])
-                change = ast.literal_eval(kernel[2])
+        elif isinstance(operationData, tuple):
+            if operationData[0] == "colorTransform":
+                print(x.dtype)
+                init = np.array(ast.literal_eval(operationData[1])).astype(np.uint8)
+                change = np.array(ast.literal_eval(operationData[2])).astype(np.uint8)
                 mask = (x[:,:,0] == init[0]) & (x[:,:,1] == init[1]) & (x[:,:,2] == init[2])
-                x[mask] = ast.literal_eval(change)
+                x[mask] = change
                 return x
 
-        elif kernel in self.kernels:
+            elif operationData[0] == "add":
+                return np.add(x, int(operationData[1]))
+
+        elif operationData in self.kernels:
             output = np.zeros_like(x)
             height, width, channels = x.shape
-            K                       = self.kernels[kernel]
+            K                       = self.kernels[operationData]
 
             for c in range(channels):
                 output[:,:,c] = convolve2d(x[:,:,c], K, mode='same', boundary='symm')
