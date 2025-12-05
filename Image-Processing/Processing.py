@@ -1,4 +1,4 @@
-
+import ast 
 import numpy as np
 from scipy.signal import convolve2d
 
@@ -34,6 +34,14 @@ class Processor:
             print(mag.shape)
             edge_rgb = np.stack([mag, mag, mag], axis=-1)
             return np.clip(edge_rgb, 0, 255).astype(np.uint8)
+
+        elif isinstance(kernel, tuple):
+            if kernel[0] == "colorTransform":
+                init = ast.literal_eval(kernel[1])
+                change = ast.literal_eval(kernel[2])
+                mask = (x[:,:,0] == init[0]) & (x[:,:,1] == init[1]) & (x[:,:,2] == init[2])
+                x[mask] = ast.literal_eval(change)
+                return x
 
         elif kernel in self.kernels:
             output = np.zeros_like(x)
